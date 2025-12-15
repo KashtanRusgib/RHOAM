@@ -1,0 +1,43 @@
+name: Lint and Format Check
+
+# Run on push and on pull requests targeting the main branch
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      
+# Job ID must be unique (ci_lint), but the Job Name must match the Ruleset Check name exactly.
+jobs:
+  ci_lint:
+    name: ci/lint
+    runs-on: ubuntu-latest
+    
+    # We only need a single Node.js version for linting
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm' # Use npm cache for fast installation
+
+    - name: Install Dependencies
+      # Use npm ci for clean, reproducible installs, as required for CI
+      run: npm ci
+
+    - name: Run ESLint Check
+      # Assumes a script named 'lint' exists in package.json
+      run: npm run lint
+
+    - name: Run Prettier Format Check
+      # Assumes a script named 'format:check' exists in package.json for verification
+      run: npm run format:check
